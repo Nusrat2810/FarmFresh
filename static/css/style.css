@@ -1,0 +1,72 @@
+/* ---------- Global ---------- */
+body {
+    background-color: #f0f8f5; /* soft organic green */
+    color: #2d3e2d;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* ---------- Navbar ---------- */
+.navbar {
+    background-color: #587e47; /* organic green */
+}
+
+.navbar-brand,
+.nav-link {
+    color: #ffffff !important;
+}
+
+.nav-link:hover {
+    text-decoration: underline;
+}
+
+/* ---------- Buttons ---------- */
+.btn-primary {
+    background-color: #587e47;
+    border-color: #587e47;
+}
+
+.btn-primary:hover {
+    background-color: #2e7d32;
+    border-color: #2e7d32;
+}
+
+.btn-success {
+    background-color: #43a047;
+    border-color: #43a047;
+}
+
+.btn-success:hover {
+    background-color: #388e3c;
+    border-color: #388e3c;
+}
+
+/* ---------- Cards ---------- */
+.card {
+    border-radius: 15px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border: none;
+}
+
+/* ---------- Headings ---------- */
+h1, h2, h3, h4 {
+    color: #587e47;
+}
+
+/* ---------- Forms ---------- */
+.form-control {
+    border-radius: 10px;
+}
+
+/* ---------- Flash Messages ---------- */
+.alert {
+    border-radius: 10px;
+}
+
+/* ---------- Footer ---------- */
+footer {
+    margin-top: 50px;
+    padding: 20px 0;
+    text-align: center;
+    background-color: #587e47;
+    color: #ffffff;
+}

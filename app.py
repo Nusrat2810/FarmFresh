@@ -25,14 +25,14 @@ def create_app():
     def load_user(user_id):
         return User.query.get(int(user_id))
     
-    if not os.path.exists('database.db'):
+    if not os.path.exists('instance/database.db'):
         with app.app_context(): # gives flask access to app configuration
             db.create_all()
             print("Database Created!")
 
     @app.route('/') #test route
     def home():
-        return "FarmFresh is running!"
+        return render_template('base.html')
     
 
     @app.route('/register', methods=['GET','POST'])
@@ -46,7 +46,7 @@ def create_app():
             existing_user = User.query.filter_by(email = form.email.data).first()
             if existing_user:
                 flash('Email already exist', 'danger')
-                return redirect(url_for('login'))
+                return redirect(url_for('register'))
             
             #hashing password
             hashed_password = generate_password_hash(form.password.data)
@@ -62,6 +62,10 @@ def create_app():
 
             db.session.add(new_user)
             db.session.commit()
+
+            print(User.query.all())
+            #to check if account was created
+
             flash('Registration Successful!', 'success')
             return redirect(url_for('login'))
         
@@ -70,6 +74,7 @@ def create_app():
 
     @app.route('/login', methods=['GET', 'POST'])
     def login():
+        #if request.method == 'POST':
         if current_user.is_authenticated:
             return redirect(url_for('home'))
 
@@ -82,9 +87,9 @@ def create_app():
 
                 # Role-based redirect
                 if user.role == 'farmer':
-                    return redirect(url_for('farmer_dashboard'))
+                    return redirect(url_for('dashboard'))
                 else:
-                    return redirect(url_for('customer_dashboard'))
+                    return redirect(url_for('products'))
             else:
                 flash('Login failed. Check email and password.', 'danger')
 
@@ -96,6 +101,22 @@ def create_app():
         logout_user()
         flash('You have been logged out.', 'info')
         return redirect(url_for('home'))
+    
+
+    @app.route('/dashboard')
+    @login_required
+    def dashboard():
+        return render_template('dashboard.html')
+    
+    @app.route('/products')
+    @login_required
+    def products():
+        return render_template('products.html')
+    
+    @app.route('/add_product')
+    @login_required
+    def add_product():
+        return render_template('products.html')
 
 
 

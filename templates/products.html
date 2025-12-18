@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block content %}
+<h2 class="mb-4">🌱 Farmer Dashboard</h2>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <p class="mb-0">
+        Welcome, <strong>{{ current_user.name }}</strong>  
+        <br>
+        <small class="text-muted">Manage your products</small>
+    </p>
+    <a href="{{ url_for('add_product') }}" class="btn btn-success">
+        + Add New Product
+    </a>
+</div>
+
+{% if products %}
+<div class="row">
+    {% for product in products %}
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            {% if product.image %}
+                <img src="{{ url_for('static', filename='images/' ~ product.image) }}"
+                     class="card-img-top"
+                     style="height: 200px; object-fit: cover;">
+            {% else %}
+                <img src="{{ url_for('static', filename='images/default_product.jpg') }}"
+                     class="card-img-top"
+                     style="height: 200px; object-fit: cover;">
+            {% endif %}
+
+            <div class="card-body">
+                <h5 class="card-title">{{ product.name }}</h5>
+
+                <p class="mb-1">
+                    <strong>Price:</strong> ${{ product.price }}
+                </p>
+                <p class="mb-2">
+                    <strong>Quantity:</strong> {{ product.quantity }}
+                </p>
+                
+                {% if product.quantity > 0 %}
+                    <span class="badge bg-success">In Stock</span>
+                {% else %}
+                    <span class="badge bg-danger">Out of Stock</span>
+                {% endif %}
+                
+            </div>
+
+            <div class="card-footer text-muted text-center">
+                Organic & Fresh 🌿
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+
+{% endblock %}
