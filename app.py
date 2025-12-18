@@ -1,11 +1,12 @@
 from flask import Flask, render_template, redirect, url_for, flash, request
+import requests
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 import os
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
-from forms import RegistrationForm, LoginForm, ProductForm
+from forms import RegistrationForm, LoginForm, ProductForm, ProfileForm
 
 db = SQLAlchemy()
 login_manager = LoginManager()
@@ -89,7 +90,7 @@ def create_app():
                 flash(f'Welcome, {user.name}!', 'success')
 
                 # Role-based redirect
-                if user.role == 'farmer':
+                if user.role == 'customer':
                     return redirect(url_for('dashboard'))
                 else:
                     return redirect(url_for('products'))
@@ -105,11 +106,6 @@ def create_app():
         flash('You have been logged out.', 'info')
         return redirect(url_for('home'))
     
-
-    @app.route('/dashboard')
-    @login_required
-    def dashboard():
-        return render_template('dashboard.html')
     
     @app.route('/products', methods = ['GET','POST'])
     @login_required
@@ -182,7 +178,63 @@ def create_app():
         
         return render_template('products.html', form=form)"""
 
+    @app.route('/dashboard')
+    @login_required
+    def dashboard():
+        farmers = User.query.filter_by(role='farmer').all()
+        return render_template('dashboard.html', farmers = farmers)
+    
+    @app.route('/profile', methods = ['GET', 'POST'])
+    @login_required
+    def profile():
+        if current_user.role != 'farmer':
+            flash('Unauthorized access', 'danger')
+            return redirect(url_for('home'))
+        
+        form = ProfileForm()
+        
+        """if request.method == 'POST':
+            return 
+        
+        else:
+            return"""
+        
 
+        if form.validate_on_submit():
+            # Convert address → latitude & longitude
+            lat, lon = geocode_address(form.address.data)
+            if lat is None:
+                flash('Could not locate address. Please enter more details.', 'danger')
+                return redirect(url_for('profile'))
+            
+            current_user.address = address
+            current_user.latitude = lat
+            current_user.longitude = lon
+            db.session.commit()  # Saves changes permanently
+
+            flash('Farm location saved successfully!', 'success')
+            return redirect(url_for('products'))
+            
+        
+
+        return render_template('profile.html')
+    
+    def geocode_address(address):
+        url = "https://nominatim.openstreetmap.org/search"
+        params = {
+            "q": address,
+            "format": "json"
+        }
+        headers = {"User-Agent": "FarmFreshApp"}  # required by Nominatim
+
+        response = requests.get(url, params=params, headers=headers)
+        data = response.json()
+
+        if data:
+            return float(data[0]['lat']), float(data[0]['lon'])
+        return None, None
+
+    
 
     
     return app

@@ -1,4 +1,50 @@
 {% extends "base.html" %}
 {% block content %}
 
+<h2 class="mb-4">🌍 Organic Farmers Near You</h2>
+
+<div id="map" style="height:500px; border-radius:15px;"></div>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+    var map = L.map('map').setView([20, 0], 2);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    // Hardcoded test farmers
+    /*var farmers = [
+        {name: "Farmer A", address: "Kathmandu, Nepal", lat: 27.7172, lon: 85.3240},
+        {name: "Farmer B", address: "Pokhara, Nepal", lat: 28.2096, lon: 83.9856},
+        {name: "Farmer C", address: "Lalitpur, Nepal", lat: 27.6720, lon: 85.3200}
+    ];
+
+    farmers.forEach(function(farmer) {
+        L.marker([farmer.lat, farmer.lon])
+            .addTo(map)
+            .bindPopup(`
+                <strong>${farmer.name}</strong><br>
+                ${farmer.address}<br>
+                🌱 Organic Farmer
+            `);
+    });*/
+    var farmers = {{ farmers | tojson | safe }}; // start working on that error
+    farmers.forEach(function(farmer) {
+        if (farmer.latitude && farmer.longitude) {
+            L.marker([farmer.latitude, farmer.longitude])
+                .addTo(map)
+                .bindPopup(
+                    "<strong>" + farmer.name + "</strong><br>" +
+                    farmer.address + "<br>🌱 Organic Farmer"
+                );
+        }
+    });
+    
+
+    
+</script>
+
 {% endblock %}

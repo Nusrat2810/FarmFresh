@@ -23,3 +23,6 @@ class ProductForm(FlaskForm):
     quantity = StringField('Quantity', validators=[DataRequired()])
     image = FileField('Product Image', validators=[FileAllowed(['jpg','png','jpeg'])])
     submit = SubmitField('Add Product')
+
+class ProfileForm(FlaskForm):
+    test = 1
