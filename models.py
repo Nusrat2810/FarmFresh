@@ -12,3 +12,18 @@ class User(db.Model, UserMixin):
 
     def __repr__(self):
         return f"<User {self.email}>"
+    
+class Product(db.Model):
+    __tablename__ = 'products'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100))
+    price = db.Column(db.Float)
+    quantity = db.Column(db.Integer)
+    image = db.Column(db.String(200))
+    farmer_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+
+    farmer = db.relationship('User', backref='products')
+
+    def __repr__(self):
+        return f"<Product {self.name}>"

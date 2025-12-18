@@ -4,7 +4,8 @@ from flask_login import LoginManager
 import os
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
-from forms import RegistrationForm, LoginForm
+from werkzeug.utils import secure_filename
+from forms import RegistrationForm, LoginForm, ProductForm
 
 db = SQLAlchemy()
 login_manager = LoginManager()
@@ -14,12 +15,14 @@ def create_app():
     app = Flask(__name__)
     app.config['SECRET_KEY'] = 'no-secret'
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
+    app.config['UPLOAD_FOLDER'] = 'static/images'
+    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
     db.init_app(app)
     login_manager.init_app(app)
     login_manager.login_view = 'login'
 
-    from models import User
+    from models import User, Product
 
     @login_manager.user_loader
     def load_user(user_id):
@@ -108,16 +111,76 @@ def create_app():
     def dashboard():
         return render_template('dashboard.html')
     
-    @app.route('/products')
+    @app.route('/products', methods = ['GET','POST'])
     @login_required
     def products():
-        return render_template('products.html')
+        if current_user.role != 'farmer':
+            flash('Unauthorized access', 'danger')
+            return redirect(url_for('home'))
+        
+        form = ProductForm()
+
+        if request.method == 'POST':
+            if form.validate_on_submit():
+                filename = None
+
+                if form.image.data:
+                    filename = secure_filename(form.image.data.filename)
+                    form.image.data.save(
+                        os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                    )
+
+                product = Product(
+                    name = form.name.data,
+                    price = float(form.price.data),
+                    quantity = int(form.quantity.data),
+                    image = filename,
+                    farmer_id = current_user.id
+                )
+
+                db.session.add(product)
+                db.session.commit()
+                print(Product.query.all())
+
+                flash('Product added!', 'success')
+                return redirect(url_for('products'))
+        products = Product.query.filter_by(farmer_id=current_user.id).all()
+        
+        return render_template('products.html', form=form, products=products)
     
-    @app.route('/add_product')
+    """@app.route('/add_product', methods=['GET','POST'])
     @login_required
     def add_product():
-        return render_template('products.html')
+        if current_user.role != 'farmer':
+            flash('Unauthorized access', 'danger')
+            return redirect(url_for('home'))
+        
+        form = ProductForm()
+        if form.validate_on_submit():
+            filename = None
 
+            if form.image.data:
+                filename = secure_filename(form.image.data.filename)
+                form.image.data.save(
+                    os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                )
+
+            product = Product(
+                name = form.name.data,
+                price = float(form.price.data),
+                quantity = int(form.quantity.data),
+                image = filename,
+                farmer_id = current_user.id
+            )
+
+            db.session.add(product)
+            db.session.commit()
+            print(Product.query.all())
+
+            flash('Product added!', 'success')
+            return redirect(url_for('products'))
+        
+        return render_template('products.html', form=form)"""
 
 
 
