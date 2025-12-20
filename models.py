@@ -25,8 +25,11 @@ class Product(db.Model):
     price = db.Column(db.Float)
     quantity = db.Column(db.Integer)
     image = db.Column(db.String(200))
-    farmer_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    stock = db.Column(db.Boolean, default = True)
 
+    # add stock column
+
+    farmer_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     farmer = db.relationship('User', backref='products')
 
     def __repr__(self):

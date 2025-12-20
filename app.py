@@ -132,6 +132,7 @@ def create_app():
                     quantity = int(form.quantity.data),
                     image = filename,
                     farmer_id = current_user.id
+                    
                 )
 
                 db.session.add(product)
@@ -143,6 +144,22 @@ def create_app():
         products = Product.query.filter_by(farmer_id=current_user.id).all()
         
         return render_template('products.html', form=form, products=products)
+    
+    @app.route('/delete_product<int:product_id>', methods = ['POST'])
+    @login_required
+    def delete_product(product_id):
+
+        product = Product.query.get_or_404(product_id)
+        if current_user.role != 'farmer':
+            flash('Unauthorized access', 'danger')
+            return redirect(url_for('home'))
+        
+        db.session.delete(product)
+        db.session.commit()
+        flash(f"{product.name} has been deleted.", "success")
+        return redirect(url_for('products'))
+        
+
     
     """@app.route('/add_product', methods=['GET','POST'])
     @login_required
@@ -181,8 +198,20 @@ def create_app():
     @app.route('/dashboard')
     @login_required
     def dashboard():
-        farmers = User.query.filter_by(role='farmer').all()
-        return render_template('dashboard.html', farmers = farmers)
+        farmers_db = User.query.filter_by(role='farmer').all()
+        farmers = []
+        for f in farmers_db:
+            if f.lat is not None and f.lon is not None:
+                farmers.append({
+                    "name" : f.name,
+                    "address" : f.address,
+                    "lat" : f.lat,
+                    "lon" : f.lon
+                })
+
+        products = Product.query.all()
+
+        return render_template('dashboard.html', farmers = farmers, products = products)
     
     @app.route('/profile', methods = ['GET', 'POST'])
     @login_required

@@ -31,20 +31,58 @@
                 🌱 Organic Farmer
             `);
     });*/
-    var farmers = {{ farmers | tojson | safe }}; // start working on that error
-    farmers.forEach(function(farmer) {
-        if (farmer.latitude && farmer.longitude) {
-            L.marker([farmer.latitude, farmer.longitude])
-                .addTo(map)
-                .bindPopup(
-                    "<strong>" + farmer.name + "</strong><br>" +
-                    farmer.address + "<br>🌱 Organic Farmer"
-                );
-        }
-    });
+
+    var farmers = JSON.parse(
+    document.getElementById('farmers-data').textContent
+    );
     
+    farmers.forEach(function(farmer) {
+    L.marker([farmer.lat, farmer.lon])
+        .addTo(map)
+        .bindPopup(
+            "<strong>" + farmer.name + "</strong><br>" +
+            farmer.address + "<br>🌱 Organic Farmer"
+        );
+    });
 
     
 </script>
+
+<script id="farmers-data" type="application/json">
+    {{ farmers | tojson }}
+</script>
+
+<hr>
+<h2 class="mb-4">🌿 Available Products</h2>
+<div class="row">
+    {% for product in products %}
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            {% if product.image %}
+            <img src="{{ url_for('static', filename='images/' ~ product.image) }}"
+                 class="card-img-top" style="height: 200px; object-fit: cover;">
+            {% else %}
+            <img src="{{ url_for('static', filename='images/default_product.jpg') }}"
+                 class="card-img-top" style="height: 200px; object-fit: cover;">
+            {% endif %}
+
+            <div class="card-body">
+                <h5 class="card-title">{{ product.name }}</h5>
+                <p class="mb-1"><strong>Price:</strong> ${{ product.price }}</p>
+                <p class="mb-1"><strong>Quantity:</strong> {{ product.quantity }}</p>
+                <p class="mb-1"><strong>Farmer:</strong> {{ product.farmer.name }}</p>
+            </div>
+            <!--Finish later-->
+            <div class="card-footer text-center">
+                <form method="POST" action="">
+                    <button type="submit" class="btn btn-success">
+                        Order
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
 
 {% endblock %}
