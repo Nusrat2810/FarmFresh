@@ -1,0 +1,42 @@
+{% extends "base.html "%}
+{% block content %}
+
+<div class="container mt-4">
+     {% if current_user.role == 'farmer'%}   
+        <a href="{{ url_for('farmer_orders') }}" class="btn btn-primary mt-2 mb-4 me-2">
+        <i class="fa"></i> Manage your order requests
+        </a>
+    {% endif %}
+    <h2 class="mb-4">My Orders</h2>
+
+    {% if orders %}
+        <div class="row">
+            {% for order in orders %}
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ order.product.name }}</h5>
+                            <p class="mb-1"><strong>Farmer:</strong> {{ order.farmer.name }}</p>
+                            <p class="mb-1"><strong>Price:</strong> ${{ order.product.price }}</p>
+                            <p class="mb-1"><strong>Quantity left:</strong> {{ order.product.quantity }}</p>
+                            <p class="mb-1"><strong>Order Date:</strong> {{ order.order_date.strftime('%Y-%m-%d %H:%M') }}</p>
+
+                            <p class="mb-0">
+                                <strong>Status:</strong>
+                                {% if order.status == 'pending' %}
+                                    <span class="badge bg-warning">Pending</span>
+                                {% else %}
+                                    <span class="badge bg-success">Delivered</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p>You have not placed any orders yet.</p>
+    {% endif %}
+</div>
+
+{% endblock %}

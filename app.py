@@ -23,7 +23,7 @@ def create_app():
     login_manager.init_app(app)
     login_manager.login_view = 'login'
 
-    from models import User, Product
+    from models import User, Product, Order
 
     @login_manager.user_loader
     def load_user(user_id):
@@ -220,13 +220,26 @@ def create_app():
             return redirect(url_for('profile'))
         
         return render_template('profile.html', form = form)
+    
+
+    @app.route('/my_orders', methods=['GET'])
+    @login_required
+    def my_orders():
+        orders = Order.query.filter_by(buyer_id=current_user.id).order_by(Order.order_date.desc()).all()
+        return render_template('my_orders.html', orders=orders)
+    
+    @app.route('/farmer_orders')
+    @login_required
+    def farmer_orders():
+        orders = Order.query.filter_by(farmer_id = current_user.id).order_by(Order.order_date.desc()).all()
+        return render_template('farmer_orders.html', orders=orders)
+    
+
+    @app.route('/order/<int:product_id>', methods=['GET,POST'])
+    def place_order():
+        return render_template('dashboard.html')
 
 
-
-            
-        
-
-        return render_template('profile.html')
     
     
     def geocode_address(address):
