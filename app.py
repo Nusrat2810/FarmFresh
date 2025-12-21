@@ -6,7 +6,7 @@ import os
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
-from forms import RegistrationForm, LoginForm, ProductForm, ProfileForm
+from forms import RegistrationForm, LoginForm, ProductForm, EditProfileForm
 
 db = SQLAlchemy()
 login_manager = LoginManager()
@@ -104,7 +104,7 @@ def create_app():
     def logout():
         logout_user()
         flash('You have been logged out.', 'info')
-        return redirect(url_for('home'))
+        return redirect(url_for('login'))
     
     
     @app.route('/products', methods = ['GET','POST'])
@@ -160,41 +160,6 @@ def create_app():
         return redirect(url_for('products'))
         
 
-    
-    """@app.route('/add_product', methods=['GET','POST'])
-    @login_required
-    def add_product():
-        if current_user.role != 'farmer':
-            flash('Unauthorized access', 'danger')
-            return redirect(url_for('home'))
-        
-        form = ProductForm()
-        if form.validate_on_submit():
-            filename = None
-
-            if form.image.data:
-                filename = secure_filename(form.image.data.filename)
-                form.image.data.save(
-                    os.path.join(app.config['UPLOAD_FOLDER'], filename)
-                )
-
-            product = Product(
-                name = form.name.data,
-                price = float(form.price.data),
-                quantity = int(form.quantity.data),
-                image = filename,
-                farmer_id = current_user.id
-            )
-
-            db.session.add(product)
-            db.session.commit()
-            print(Product.query.all())
-
-            flash('Product added!', 'success')
-            return redirect(url_for('products'))
-        
-        return render_template('products.html', form=form)"""
-
     @app.route('/dashboard')
     @login_required
     def dashboard():
@@ -216,37 +181,53 @@ def create_app():
     @app.route('/profile', methods = ['GET', 'POST'])
     @login_required
     def profile():
-        if current_user.role != 'farmer':
-            flash('Unauthorized access', 'danger')
-            return redirect(url_for('home'))
-        
-        form = ProfileForm()
-        
+          
         """if request.method == 'POST':
             return 
         
         else:
             return"""
         
+        form = EditProfileForm()
+        # Pre-fill existing data when GET request
+        if request.method == 'GET':
+            form.name.data = current_user.name
+            form.email.data = current_user.email
+            form.address.data = current_user.address 
 
         if form.validate_on_submit():
-            # Convert address → latitude & longitude
-            lat, lon = geocode_address(form.address.data)
-            if lat is None:
-                flash('Could not locate address. Please enter more details.', 'danger')
-                return redirect(url_for('profile'))
-            
-            current_user.address = address
-            current_user.latitude = lat
-            current_user.longitude = lon
-            db.session.commit()  # Saves changes permanently
+            current_user.name = form.name.data
+            current_user.email = form.email.data
+            if form.password.data.strip():
+                if form.password.data != form.confirm_password.data:
+                    print(f'{current_user.password} and {form.confirm_password.data}')
+                    flash('Password and Confirm Password doesnot match!', 'danger')
+                    return redirect(url_for('profile'))
 
-            flash('Farm location saved successfully!', 'success')
-            return redirect(url_for('products'))
+                current_user.password = generate_password_hash(form.password.data)
+            if form.address.data.strip():
+                # Convert address → latitude & longitude
+                lat, lon = geocode_address(form.address.data)
+                if lat is None or lon is None:
+                    flash('Could not locate address. Please enter more details.', 'danger')
+                    return redirect(url_for('profile'))
+                current_user.address = form.address.data
+                current_user.lat = lat
+                current_user.lon = lon
+                
+            db.session.commit()
+            flash('Profile updated successfully!', 'success')
+            return redirect(url_for('profile'))
+        
+        return render_template('profile.html', form = form)
+
+
+
             
         
 
         return render_template('profile.html')
+    
     
     def geocode_address(address):
         url = "https://nominatim.openstreetmap.org/search"
