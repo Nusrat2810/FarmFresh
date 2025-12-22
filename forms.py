@@ -7,7 +7,7 @@ class RegistrationForm(FlaskForm):
     name = StringField('Full Name', validators=[DataRequired(), Length(min=2, max=100)])
     email = StringField('Email', validators=[DataRequired(), Email()])
     password = PasswordField('Password', validators=[DataRequired(), Length(min=6)])
-    confirm_password = PasswordField('Confirm Password', validators=[DataRequired(), EqualTo('password')])
+    confirm_password = PasswordField('Confirm Password', validators=[DataRequired()])
     role = SelectField('Role', choices=[('farmer', 'Farmer'), ('customer', 'Customer')], validators=[DataRequired()])
     submit = SubmitField('Register') #creates submit button in html
 

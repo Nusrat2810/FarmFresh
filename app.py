@@ -36,7 +36,13 @@ def create_app():
 
     @app.route('/') #test route
     def home():
-        return render_template('base.html')
+        if current_user.is_authenticated:
+            return redirect(url_for('home'))
+        
+        form = LoginForm()
+        
+        return redirect('login')
+
     
 
     @app.route('/register', methods=['GET','POST'])
@@ -50,6 +56,9 @@ def create_app():
             existing_user = User.query.filter_by(email = form.email.data).first()
             if existing_user:
                 flash('Email already exist', 'danger')
+                return redirect(url_for('register'))
+            if form.password.data != form.confirm_password.data:
+                flash('Password and Confirm Password does not match!', 'danger')
                 return redirect(url_for('register'))
             
             #hashing password
@@ -83,19 +92,24 @@ def create_app():
             return redirect(url_for('home'))
 
         form = LoginForm()
+
         if form.validate_on_submit():
             user = User.query.filter_by(email=form.email.data).first()
-            if user and check_password_hash(user.password, form.password.data):
-                login_user(user)
-                flash(f'Welcome, {user.name}!', 'success')
+            if user:
+                if check_password_hash(user.password, form.password.data):
+                    login_user(user)
+                    flash(f'Welcome, {user.name}!', 'success')
 
-                # Role-based redirect
-                if user.role == 'customer':
-                    return redirect(url_for('dashboard'))
+                    # Role-based redirect
+                    if user.role == 'customer':
+                        return redirect(url_for('dashboard'))
+                    else:
+                        return redirect(url_for('products'))
                 else:
-                    return redirect(url_for('products'))
+                    flash('Password incorrect!','danger')
             else:
-                flash('Login failed. Check email and password.', 'danger')
+                flash('User does not exist! Register!', 'danger')
+                return redirect('register')
 
         return render_template('login.html', form=form)
     
@@ -174,7 +188,7 @@ def create_app():
                     "lon" : f.lon
                 })
 
-        products = Product.query.all()
+        products = Product.query.filter_by(stock=True).all()
 
         return render_template('dashboard.html', farmers = farmers, products = products)
     
@@ -197,7 +211,11 @@ def create_app():
 
         if form.validate_on_submit():
             current_user.name = form.name.data
-            current_user.email = form.email.data
+            if current_user.email != form.email.data:
+                existing_user = User.query.filter_by(email = form.email.data).first()
+                if existing_user:
+                    flash('Email already exist', 'danger')
+                    return redirect(url_for('profile'))
             if form.password.data.strip():
                 if form.password.data != form.confirm_password.data:
                     print(f'{current_user.password} and {form.confirm_password.data}')
@@ -222,7 +240,7 @@ def create_app():
         return render_template('profile.html', form = form)
     
 
-    @app.route('/my_orders', methods=['GET'])
+    @app.route('/my_orders', methods=['GET','POST'])
     @login_required
     def my_orders():
         orders = Order.query.filter_by(buyer_id=current_user.id).order_by(Order.order_date.desc()).all()
@@ -234,10 +252,33 @@ def create_app():
         orders = Order.query.filter_by(farmer_id = current_user.id).order_by(Order.order_date.desc()).all()
         return render_template('farmer_orders.html', orders=orders)
     
+    @app.route('/place_order/<int:product_id>', methods=['POST'])
+    @login_required
+    def place_order(product_id):
 
-    @app.route('/order/<int:product_id>', methods=['GET,POST'])
-    def place_order():
-        return render_template('dashboard.html')
+        product = Product.query.filter_by(id=product_id).first()
+        product.stock = False
+
+        order = Order(
+            product_id = product.id,
+            buyer_id = current_user.id,
+            farmer_id= product.farmer_id,
+
+        )
+        db.session.add(order)
+        db.session.commit()
+        flash("Order placed successfully!", "success")
+        return redirect(url_for('dashboard'))
+
+    @app.route('/mark_delivered/<int:order_id>', methods=['POST'])
+    @login_required
+    def mark_delivered(order_id):
+        order = Order.query.filter_by(id=order_id).first()
+        order.status = 'delivered'
+        db.session.commit()
+        flash("Order marked as delivered.", "success")
+        return redirect(url_for('farmer_orders'))
+
 
 
     

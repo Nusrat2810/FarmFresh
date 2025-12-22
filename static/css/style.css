@@ -70,3 +70,22 @@ footer {
     background-color: #587e47;
     color: #ffffff;
 }
+
+html, body {
+    height: 100%;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+}
+
+main {
+    flex: 1;   /* pushes footer to bottom */
+}
+
+.footer {
+    background-color: #198754; /* Bootstrap green */
+    color: white;
+    padding: 12px 0;
+}
